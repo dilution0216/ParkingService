@@ -1,3 +1,106 @@
+package org.dhicc.parkingserviceonboarding.service;
+
+import org.dhicc.parkingserviceonboarding.model.ParkingRecord;
+import org.dhicc.parkingserviceonboarding.model.PaymentCompletedEvent;
+import org.dhicc.parkingserviceonboarding.model.Payment;
+import org.dhicc.parkingserviceonboarding.reposiotry.PaymentRepository;
+import org.dhicc.parkingserviceonboarding.reposiotry.ParkingRecordRepository;
+import org.dhicc.parkingserviceonboarding.reposiotry.SubscriptionRepository;
+import org.dhicc.parkingserviceonboarding.reposiotry.DiscountCouponRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationEventPublisher;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class PaymentServiceTest {
+
+    @Mock
+    private PaymentRepository paymentRepository;
+    @Mock
+    private ParkingRecordRepository parkingRecordRepository;
+    @Mock
+    private SubscriptionRepository subscriptionRepository;
+    @Mock
+    private DiscountCouponRepository discountCouponRepository;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @InjectMocks
+    private PaymentService paymentService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testProcessPayment_PublishesEvent() {
+        // Given
+        String vehicleNumber = "TEST123";
+        int fee = 5000;
+        LocalDateTime now = LocalDateTime.now();
+
+        // 🚗 출차 기록이 존재하도록 Mock 설정
+        ParkingRecord mockRecord = new ParkingRecord();
+        mockRecord.setVehicleNumber(vehicleNumber);
+        mockRecord.setFee(fee);
+        mockRecord.setExitTime(now);
+
+        Payment payment = new Payment();
+        payment.setVehicleNumber(vehicleNumber);
+        payment.setAmount(fee);
+        payment.setTimestamp(now);
+
+        when(parkingRecordRepository.findByVehicleNumberAndExitTimeIsNotNull(vehicleNumber))
+                .thenReturn(Optional.of(mockRecord)); // ✅ 출차 기록 반환
+
+        when(subscriptionRepository.findByVehicleNumber(vehicleNumber)).thenReturn(Optional.empty());
+        when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+
+        // When
+        paymentService.processPayment(vehicleNumber, Optional.empty());
+
+        // Then
+        ArgumentCaptor<PaymentCompletedEvent> eventCaptor = ArgumentCaptor.forClass(PaymentCompletedEvent.class);
+        verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
+
+        PaymentCompletedEvent publishedEvent = eventCaptor.getValue();
+        assertEquals(vehicleNumber, publishedEvent.getVehicleNumber());
+        assertEquals(fee, publishedEvent.getAmount());
+        assertNotNull(publishedEvent.getTimestamp());
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //package org.dhicc.parkingserviceonboarding.service;
 //
 //
