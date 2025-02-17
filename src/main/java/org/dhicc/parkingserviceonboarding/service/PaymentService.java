@@ -1,6 +1,7 @@
 package org.dhicc.parkingserviceonboarding.service;
 
 import lombok.RequiredArgsConstructor;
+import org.dhicc.parkingserviceonboarding.model.PaymentCompletedEvent;
 import org.dhicc.parkingserviceonboarding.model.DiscountCoupon;
 import org.dhicc.parkingserviceonboarding.model.ParkingRecord;
 import org.dhicc.parkingserviceonboarding.model.Payment;
@@ -8,6 +9,7 @@ import org.dhicc.parkingserviceonboarding.reposiotry.DiscountCouponRepository;
 import org.dhicc.parkingserviceonboarding.reposiotry.ParkingRecordRepository;
 import org.dhicc.parkingserviceonboarding.reposiotry.PaymentRepository;
 import org.dhicc.parkingserviceonboarding.reposiotry.SubscriptionRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class PaymentService {
     private final ParkingRecordRepository parkingRecordRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final DiscountCouponRepository discountCouponRepository;
+    private final ApplicationEventPublisher eventPublisher; //  이벤트 발행기 추가
 
     public Payment processPayment(String vehicleNumber, Optional<String> couponCode) {
         // 출차 기록 확인
@@ -50,11 +53,16 @@ public class PaymentService {
         // 결제 처리
         Payment payment = new Payment();
         payment.setVehicleNumber(vehicleNumber);
-        payment.setAmount(finalFee); // 할인 적용된 최종 금액 저장
-        payment.setDiscountDetails(discountDetails); // 할인 내역 저장
+        payment.setAmount(finalFee);
+        payment.setDiscountDetails(discountDetails);
         payment.setTimestamp(LocalDateTime.now());
 
-        return paymentRepository.save(payment);
+        Payment savedPayment = paymentRepository.save(payment);
+
+        //  결제 완료 이벤트 발행 (비동기 영수증 발송을 위해)
+        eventPublisher.publishEvent(new PaymentCompletedEvent(savedPayment.getVehicleNumber(), savedPayment.getAmount(), savedPayment.getTimestamp().toString()));
+
+        return savedPayment;
     }
 
     public Payment getPaymentById(Long id) {
