@@ -6,6 +6,11 @@
 차량의 입차/출차, 요금 계산, 정기권 등록/취소 등의 기능을 갖고 있음
 
 ---
+## ERD
+
+
+
+
 
 ## 🚀 프로젝트 설정 및 실행 방법
 
@@ -50,44 +55,55 @@ http://localhost:8080/v3/api-docs
 ---
 
 ## 📌 주요 API 목록
+Parking Service API 명세서
+## 🏷 **1. 주차 관리 API** (`/parking`)
 
-### 1️⃣ **주차 관리 API** (`/parking`)
+🚗 **차량의 입차/출차 기록을 관리하는 API**
 
-### 🚗 **입차 기록 등록**
+### ✅ **1-1. 입차 기록 등록**
 
 - **URL**: `POST /parking/entry/{vehicleNumber}`
 - **설명**: 차량이 주차장에 입차할 때 호출
 - **응답 예시**:
 
-```
+```json
+
 {
     "vehicleNumber": "TEST123",
     "entryTime": "2025-02-14T10:00:00"
 }
+
 ```
 
-### 🚙 **출차 기록 등록**
+---
+
+### ✅ **1-2. 출차 기록 등록**
 
 - **URL**: `POST /parking/exit/{vehicleNumber}`
 - **설명**: 차량이 주차장에서 출차할 때 호출
 - **응답 예시**:
 
-```
+```json
+
 {
     "vehicleNumber": "TEST123",
     "entryTime": "2025-02-14T10:00:00",
     "exitTime": "2025-02-14T12:00:00",
     "fee": 5000
 }
+
 ```
 
-### 📝 **주차 기록 조회**
+---
+
+### ✅ **1-3. 주차 기록 조회**
 
 - **URL**: `GET /parking/{vehicleNumber}`
 - **설명**: 차량 번호로 입출차 기록을 조회
 - **응답 예시**:
 
-```
+```json
+
 {
     "data": [
         {
@@ -98,620 +114,419 @@ http://localhost:8080/v3/api-docs
         }
     ]
 }
+
 ```
 
 ---
 
-### 2️⃣ **정기권 관리 API** (`/subscription`)
+## 🏷 **2. 정기권 관리 API** (`/subscription`)
 
-### 🏷 **정기권 등록**
+📜 **정기권 등록/취소를 관리하는 API**
+
+### ✅ **2-1. 정기권 등록**
 
 - **URL**: `POST /subscription/register`
 - **설명**: 차량 번호와 기간을 입력해 정기권을 등록
 - **요청 예시**:
 
-```
+```json
+
 {
     "vehicleNumber": "TEST123",
     "startDate": "2025-02-01",
     "endDate": "2025-03-01"
 }
+
 ```
 
 - **응답 예시**:
 
-```
+```json
+
 {
     "vehicleNumber": "TEST123",
     "startDate": "2025-02-01",
     "endDate": "2025-03-01"
 }
+
 ```
 
-### ❌ **정기권 취소**
+---
+
+### ✅ **2-2. 정기권 취소**
 
 - **URL**: `DELETE /subscription/cancel/{vehicleNumber}`
 - **설명**: 차량 번호를 이용해 정기권을 취소
 - **응답 예시**:
 
-```
+```json
+
 {
     "message": "정기권이 취소되었습니다."
 }
+
 ```
-## 3️⃣ **결제 API** (`/payment`)
 
-### 💳 **주차 요금 결제**
+---
 
-- **URL**: `POST /payment/process`
-- **설명**: 차량의 주차 요금을 결제
+## 🏷 **3. 결제 관리 API** (`/payment`)
+
+💳 **출차 후 요금 결제 및 조회 기능을 제공하는 API**
+
+### ✅ **3-1. 결제 요청**
+
+- **URL**: `POST /payment/process/{vehicleNumber}`
+- **설명**: 차량의 출차 기록을 바탕으로 결제를 진행
 - **요청 예시**:
-    
-    ```json
-    
-    {
-        "vehicleNumber": "TEST123",
-        "amount": 5000,
-        "couponCode": "WELCOME10"
-    }
-    
-    ```
-    
+
+```json
+
+{
+    "couponCode": "DISCOUNT50"
+}
+
+```
+
 - **응답 예시**:
-    
-    ```json
-    
-    {
-        "vehicleNumber": "TEST123",
-        "amount": 4500,
-        "discountApplied": true,
-        "timestamp": "2025-02-14T12:05:00"
-    }
-    
-    ```
-    
 
-### 📜 **결제 내역 조회**
+```json
 
-- **URL**: `GET /payment/history/{vehicleNumber}`
-- **설명**: 특정 차량의 결제 내역을 조회
+{
+    "vehicleNumber": "TEST123",
+    "amount": 2500,
+    "discountDetails": "쿠폰 할인 적용: DISCOUNT50 (50%)",
+    "timestamp": "2025-02-14T12:01:00"
+}
+
+```
+
+---
+
+### ✅ **3-2. 결제 내역 조회**
+
+- **URL**: `GET /payment/{paymentId}`
+- **설명**: 특정 결제 ID로 결제 내역을 조회
 - **응답 예시**:
-    
-    ```json
-    
-    {
-        "data": [
-            {
-                "vehicleNumber": "TEST123",
-                "amount": 4500,
-                "discountApplied": true,
-                "timestamp": "2025-02-14T12:05:00"
-            }
-        ]
-    }
-    
-    ```
----
 
-## ✅ 테스트 정리
+```json
 
-## ✅ **1. 주차 관련 테스트 (ParkingServiceTest)**
-
-📌 **입차 및 출차 로직을 검증하는 테스트 코드**
-
-### **📍입차 테스트 (`testVehicleEntry`)**
-
-- 🚗 새로운 차량이 입차할 때 **정상적으로 기록되는지 검증**
-- 동일 차량이 **이미 입차한 상태에서 중복 입차 요청 시 예외 발생하는지 확인**
-
-```java
-
-@Test
-void testVehicleEntry() {
-    ParkingRecord record = parkingService.processEntry("TEST123");
-
-    assertNotNull(record);
-    assertEquals("TEST123", record.getVehicleNumber());
-    assertNotNull(record.getEntryTime());
+{
+    "vehicleNumber": "TEST123",
+    "amount": 5000,
+    "timestamp": "2025-02-14T12:01:00"
 }
 
 ```
 
 ---
 
-### **📍출차 테스트 (`testVehicleExit`)**
+### ✅ **3-3. 모든 결제 내역 조회**
 
-- 🚙 차량이 출차할 때 **정상적으로 출차 시간이 기록되는지 확인**
-- 정기권 사용자의 경우 **요금이 0원으로 계산되는지 검증**
-- **출차 기록 없이 출차 요청 시 예외 발생하는지 확인**
+- **URL**: `GET /payment/all`
+- **설명**: 전체 결제 내역을 조회
+- **응답 예시**:
 
-```java
+```json
 
-@Test
-void testVehicleExit() {
-    parkingService.processEntry("TEST123");
-
-    ParkingRecord record = parkingService.processExit("TEST123");
-
-    assertNotNull(record.getExitTime());
-    assertTrue(record.getFee() >= 0);
+{
+    "payments": [
+        {
+            "vehicleNumber": "TEST123",
+            "amount": 5000,
+            "timestamp": "2025-02-14T12:01:00"
+        },
+        {
+            "vehicleNumber": "TEST456",
+            "amount": 3000,
+            "timestamp": "2025-02-14T14:20:00"
+        }
+    ]
 }
 
 ```
 
 ---
 
-### **📍요금 계산 테스트 (`testFeeCalculation`)**
+## 🏷 **4. 비동기 결제 정산 & 영수증 발송 API** (`/receipt`)
 
-- 기본 요금 정책(30분 무료, 이후 10분당 1,000원) 검증
-- 정기권 소지 차량의 요금 면제 여부 검증
-- 할인 쿠폰 적용 테스트
+📧 **결제 완료 시 이벤트 기반으로 자동 실행**
 
-```java
+### ✅ **4-1. 결제 완료 후 영수증 발송 이벤트 발생**
 
-@Test
-void testFeeCalculation() {
-    LocalDateTime entry = LocalDateTime.of(2025, 2, 14, 10, 0);
-    LocalDateTime exit = LocalDateTime.of(2025, 2, 14, 12, 0);
+- **이벤트 트리거**: `PaymentCompletedEvent`
+- **자동 실행 API**: `ReceiptService.sendReceiptEmail()`
+- **요청 데이터 (이벤트 기반)**
 
-    int fee = parkingFeeService.calculateFee(entry, exit, false, null);
+```json
 
-    assertEquals(9000, fee); // 1시간 30분 -> 9,000원
+{
+    "vehicleNumber": "TEST123",
+    "amount": 2500,
+    "timestamp": "2025-02-14T12:01:00"
+}
+
+```
+
+- **Mock API 응답**
+
+```json
+
+{
+    "message": "비동기 영수증 이메일 발송 완료 (Mock API 호출)"
 }
 
 ```
 
 ---
 
-## ✅ **2. 정기권 관련 테스트 (SubscriptionServiceTest)**
+## 🏷 **5. 요금 정책 관리 API** (`/pricing-policy`)
 
-📌 **정기권 등록 및 취소를 검증하는 테스트 코드**
+⚙ **관리자가 동적으로 요금 정책을 설정할 수 있는 API**
 
-### **📍정기권 등록 테스트 (`testRegisterSubscription`)**
+### ✅ **5-1. 요금 정책 조회**
 
-- 🚀 차량 번호와 기간을 입력하면 **정상적으로 등록되는지 확인**
-- **이미 등록된 차량이 다시 정기권 등록을 시도할 경우 예외 발생하는지 확인**
+- **URL**: `GET /pricing-policy`
+- **설명**: 현재 적용된 요금 정책을 조회
+- **응답 예시**:
 
-```java
+```json
 
-@Test
-void testRegisterSubscription() {
-    SubscriptionDTO dto = new SubscriptionDTO("TEST123", LocalDate.now(), LocalDate.now().plusMonths(1));
-
-    SubscriptionDTO result = subscriptionService.registerSubscription(dto);
-
-    assertNotNull(result);
-    assertEquals("TEST123", result.getVehicleNumber());
+{
+    "baseFee": 1000,
+    "extraFeePer10Min": 500,
+    "dailyMaxFee": 15000,
+    "maxDaysCharged": 3,
+    "nightDiscount": 0.2,
+    "weekendDiscount": 0.1
 }
 
 ```
 
 ---
 
-### **📍정기권 취소 테스트 (`testCancelSubscription`)**
+### ✅ **5-2. 요금 정책 변경**
 
-- ❌ 차량 번호로 정기권을 취소할 때 **정상적으로 삭제되는지 검증**
-- **존재하지 않는 정기권을 취소하려고 하면 예외 발생하는지 확인**
+- **URL**: `PUT /pricing-policy`
+- **설명**: 관리자가 요금 정책을 변경할 수 있음
+- **요청 예시**:
 
-```java
+```json
 
-@Test
-void testCancelSubscription() {
-    subscriptionService.registerSubscription(new SubscriptionDTO("TEST123", LocalDate.now(), LocalDate.now().plusMonths(1)));
+{
+    "baseFee": 1200,
+    "extraFeePer10Min": 600,
+    "dailyMaxFee": 18000,
+    "maxDaysCharged": 5,
+    "nightDiscount": 0.25,
+    "weekendDiscount": 0.15
+}
 
-    boolean result = subscriptionService.cancelSubscription("TEST123");
+```
 
-    assertTrue(result);
+- **응답 예시**:
+
+```json
+
+{
+    "oldPolicy": {
+        "baseFee": 1000,
+        "extraFeePer10Min": 500,
+        "dailyMaxFee": 15000,
+        "nightDiscount": 0.2,
+        "weekendDiscount": 0.1
+    },
+    "newPolicy": {
+        "baseFee": 1200,
+        "extraFeePer10Min": 600,
+        "dailyMaxFee": 18000,
+        "nightDiscount": 0.25,
+        "weekendDiscount": 0.15
+    }
 }
 
 ```
 
 ---
 
-## ✅ **3. 예외 처리 테스트 (ExceptionHandlingTest)**
 
-📌 **비정상적인 요청에 대한 예외 처리를 검증하는 코드**
 
-### **📍존재하지 않는 차량 출차 요청 (`testExitWithoutEntry`)**
 
-```java
 
-@Test
-void testExitWithoutEntry() {
-    Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-        parkingService.processExit("NON_EXISTENT_CAR");
-    });
+🛠 테스트 API 명세서
+---
+## ✅ **1. 주차 관리 테스트** (`/parking`)
 
-    assertEquals("입차 기록 없음", exception.getMessage());
+📌 **주차 입출차 및 기록 조회 테스트**
+
+### 🔹 **1-1. 입차 테스트**
+
+- **테스트명**: `testRegisterEntry()`
+- **설명**: 차량이 정상적으로 입차되는지 테스트
+- **입력값**:
+    - `vehicleNumber`: `"TEST123"`
+- **검증 내용**:
+    - 입차 시간이 정상적으로 저장되는지 확인
+    - 저장된 차량 번호가 입력값과 일치하는지 확인
+
+---
+
+### 🔹 **1-2. 출차 테스트**
+
+- **테스트명**: `testRegisterExit()`
+- **설명**: 차량이 정상적으로 출차되고 요금이 계산되는지 테스트
+- **입력값**:
+    - `vehicleNumber`: `"TEST123"`
+- **검증 내용**:
+    - 출차 시간이 정상적으로 저장되는지 확인
+    - 요금이 0보다 큰 값으로 계산되는지 확인
+
+---
+
+### 🔹 **1-3. 주차 기록 조회 테스트**
+
+- **테스트명**: `testGetParkingRecords()`
+- **설명**: 특정 차량의 입출차 기록이 정상적으로 조회되는지 테스트
+- **입력값**:
+    - `vehicleNumber`: `"TEST123"`
+- **검증 내용**:
+    - 반환된 데이터 리스트가 비어있지 않은지 확인
+    - 입차, 출차 시간 및 요금 정보가 올바르게 포함되어 있는지 확인
+
+---
+
+## ✅ **2. 정기권 관리 테스트** (`/subscription`)
+
+📌 **정기권 등록 및 취소 테스트**
+
+### 🔹 **2-1. 정기권 등록 테스트**
+
+- **테스트명**: `testRegisterSubscription()`
+- **설명**: 차량에 정기권이 정상적으로 등록되는지 테스트
+- **입력값**:
+    - `vehicleNumber`: `"TEST123"`
+    - `startDate`: `"2025-02-01"`
+    - `endDate`: `"2025-03-01"`
+- **검증 내용**:
+    - 정기권 정보가 올바르게 저장되었는지 확인
+    - 시작일과 종료일이 요청값과 일치하는지 확인
+
+---
+
+### 🔹 **2-2. 정기권 취소 테스트**
+
+- **테스트명**: `testCancelSubscription()`
+- **설명**: 차량 정기권이 정상적으로 취소되는지 테스트
+- **입력값**:
+    - `vehicleNumber`: `"TEST123"`
+- **검증 내용**:
+    - 해당 차량의 정기권이 데이터베이스에서 삭제되었는지 확인
+
+---
+
+## ✅ **3. 결제 관리 테스트** (`/payment`)
+
+📌 **출차 후 결제 및 내역 조회 테스트**
+
+### 🔹 **3-1. 결제 요청 테스트**
+
+- **테스트명**: `testProcessPayment()`
+- **설명**: 차량 출차 후 요금이 정상적으로 결제되는지 테스트
+- **입력값**:
+    - `vehicleNumber`: `"TEST123"`
+    - `couponCode`: `"DISCOUNT50"`
+- **검증 내용**:
+    - 결제 내역이 정상적으로 생성되었는지 확인
+    - 할인 적용 후 최종 결제 금액이 올바르게 계산되었는지 확인
+
+---
+
+### 🔹 **3-2. 결제 내역 조회 테스트**
+
+- **테스트명**: `testGetPaymentById()`
+- **설명**: 특정 결제 ID로 결제 내역을 조회하는 테스트
+- **입력값**:
+    - `paymentId`: `"1"`
+- **검증 내용**:
+    - 반환된 결제 내역이 요청한 결제 ID와 일치하는지 확인
+    - 결제 금액과 차량 번호가 올바르게 포함되었는지 확인
+
+---
+
+## ✅ **4. 비동기 결제 정산 & 영수증 발송 테스트** (`/receipt`)
+
+📌 **결제 완료 후 이벤트 기반 비동기 영수증 발송 테스트**
+
+### 🔹 **4-1. 영수증 발송 테스트**
+
+- **테스트명**: `testSendReceiptEmail()`
+- **설명**: 결제 완료 후 비동기 이벤트가 정상적으로 처리되는지 테스트
+- **입력값**:
+    - `vehicleNumber`: `"TEST123"`
+    - `amount`: `2500`
+    - `timestamp`: `"2025-02-14T12:01:00"`
+- **검증 내용**:
+    - Mock API를 활용해 이메일 발송이 정상적으로 수행되는지 확인
+    - 로그 출력 결과를 확인하여 이메일 전송 완료 여부 체크
+
+---
+
+## ✅ **5. 요금 정책 관리 테스트** (`/pricing-policy`)
+
+📌 **관리자가 요금 정책을 변경할 수 있는지 테스트**
+
+### 🔹 **5-1. 요금 정책 조회 테스트**
+
+- **테스트명**: `testGetPricingPolicy()`
+- **설명**: 현재 적용된 요금 정책을 올바르게 조회하는지 테스트
+- **검증 내용**:
+    - 기본 요금, 추가 요금, 최대 요금 등 정책 값들이 정확한지 확인
+
+---
+
+### 🔹 **5-2. 요금 정책 변경 테스트**
+
+- **테스트명**: `testUpdatePricingPolicy()`
+- **설명**: 관리자가 요금 정책을 변경할 수 있는지 테스트
+- **입력값**:
+
+```json
+
+{
+    "baseFee": 1200,
+    "extraFeePer10Min": 600,
+    "dailyMaxFee": 18000,
+    "maxDaysCharged": 5,
+    "nightDiscount": 0.25,
+    "weekendDiscount": 0.15
 }
 
 ```
 
----
-
-### **📍정기권이 없는 차량 무료 출차 요청 (`testExitWithoutSubscription`)**
-
-```java
-
-@Test
-void testExitWithoutSubscription() {
-    parkingService.processEntry("TEST123");
-
-    ParkingRecord record = parkingService.processExit("TEST123");
-
-    assertTrue(record.getFee() > 0); // 정기권이 없으므로 요금이 부과됨
-}
-
-```
+- **검증 내용**:
+    - 정책 변경 후 `GET /pricing-policy` 호출 시 업데이트된 값이 반영되는지 확인
+    - 이전 정책과 변경된 정책을 비교하여 정상적으로 변경되었는지 체크
 
 ---
 
-## ✅ **4. Swagger 문서 검증 테스트 (SwaggerApiDocumentationTest)**
+## ✅ **6. End-to-End 테스트** (`E2E`)
 
-📌 **Swagger 문서가 정상적으로 생성되는지 검증**
+📌 **모든 기능이 실제 프로세스에서 정상적으로 동작하는지 확인하는 통합 테스트**
 
-### **📍Swagger UI 정상 접근 테스트 (`testSwaggerUiLoads`)**
+### 🔹 **6-1. 전체 프로세스 테스트**
 
-```java
+- **테스트명**: `testFullParkingProcess()`
+- **설명**: 차량 입차 → 출차 → 결제 → 영수증 발송 → 정기권 등록까지 전체 프로세스를 검증
+- **검증 내용**:
+    - 입차 기록이 정상적으로 생성되는지 확인
+    - 출차 시 요금이 계산되는지 확인
+    - 결제가 정상적으로 처리되는지 확인
+    - 이벤트 기반 영수증 발송이 정상적으로 수행되는지 확인
+    - 정기권이 정상적으로 등록되는지 확인
 
-@Test
-void testSwaggerUiLoads() {
-    RestAssured.given()
-            .baseUri("http://localhost:" + port)
-            .when().get("/swagger-ui/index.html")
-            .then()
-            .statusCode(HttpStatus.OK.value());
-}
 
-```
 
----
 
-### **📍OpenAPI JSON 문서 반환 테스트 (`testOpenApiJsonExists`)**
-
-```java
-
-@Test
-void testOpenApiJsonExists() {
-    RestAssured.given()
-            .baseUri("http://localhost:" + port)
-            .when().get("/v3/api-docs")
-            .then()
-            .statusCode(HttpStatus.OK.value())
-            .body("openapi", equalTo("3.0.1"))
-            .body("paths", not(empty()));
-}
-
-```
-
----
-
-## 1️⃣ **할인 쿠폰 컨트롤러 테스트 (`DiscountControllerTest`)**
-
-📌 **할인 쿠폰 적용 및 검증을 위한 테스트**
-
-### **📍1. 할인 쿠폰 등록 테스트 (`testRegisterDiscountCoupon`)**
-
-- 🎟 **쿠폰 코드와 할인율을 입력하면 정상적으로 등록되는지 검증**
-- **같은 코드로 중복 등록 시 예외 발생하는지 확인**
-- **입력값 예시**:
-    
-    ```json
-    
-    {
-        "couponCode": "WELCOME10",
-        "discountRate": 10
-    }
-    
-    ```
-    
-- **예상 응답**:
-    
-    ```json
-    
-    {
-        "couponCode": "WELCOME10",
-        "discountRate": 10
-    }
-    
-    ```
-    
-
-### **📍2. 할인 쿠폰 적용 테스트 (`testApplyDiscountCoupon`)**
-
-- ✅ **유효한 쿠폰을 적용 시 할인된 금액이 반환되는지 확인**
-- ❌ **만료되었거나 존재하지 않는 쿠폰 사용 시 예외 발생하는지 검증**
-- **입력값 예시**:
-    
-    ```json
-    
-    {
-        "couponCode": "WELCOME10",
-        "originalAmount": 5000
-    }
-    
-    ```
-    
-- **예상 응답**:
-    
-    ```json
-    
-    {
-        "discountedAmount": 4500
-    }
-    
-    ```
-    
-
----
-
-## 2️⃣ **주차 컨트롤러 테스트 (`ParkingControllerTest`)**
-
-📌 **입차/출차 및 주차 기록을 검증하는 테스트**
-
-### **📍1. 입차 테스트 (`testVehicleEntry`)**
-
-- 🚗 **차량이 입차할 때 정상적으로 기록되는지 확인**
-- **이미 입차한 차량이 다시 입차 요청 시 예외 발생하는지 검증**
-- **입력값 예시**:
-    
-    ```
-    
-    POST /parking/entry/TEST123
-    
-    ```
-    
-- **예상 응답**:
-    
-    ```json
-    
-    {
-        "vehicleNumber": "TEST123",
-        "entryTime": "2025-02-14T10:00:00"
-    }
-    
-    ```
-    
-
-### **📍2. 출차 테스트 (`testVehicleExit`)**
-
-- 🚙 **출차 시 정상적으로 요금이 계산되고 기록되는지 검증**
-- **출차 기록 없이 출차 요청할 경우 예외 발생 확인**
-- **입력값 예시**:
-    
-    ```
-    
-    POST /parking/exit/TEST123
-    
-    ```
-    
-- **예상 응답**:
-    
-    ```json
-    
-    {
-        "vehicleNumber": "TEST123",
-        "entryTime": "2025-02-14T10:00:00",
-        "exitTime": "2025-02-14T12:00:00",
-        "fee": 5000
-    }
-    
-    ```
-    
-
-### **📍3. 주차 기록 조회 테스트 (`testParkingHistory`)**
-
-- 📝 **차량의 입출차 기록을 정상적으로 조회할 수 있는지 검증**
-- **존재하지 않는 차량 조회 시 빈 배열 반환 확인**
-- **입력값 예시**:
-    
-    ```
-    
-    GET /parking/TEST123
-    
-    ```
-    
-- **예상 응답**:
-    
-    ```json
-    
-    {
-        "data": [
-            {
-                "vehicleNumber": "TEST123",
-                "entryTime": "2025-02-14T10:00:00",
-                "exitTime": "2025-02-14T12:00:00",
-                "fee": 5000
-            }
-        ]
-    }
-    
-    ```
-    
-
----
-
-## 3️⃣ **결제 컨트롤러 테스트 (`PaymentControllerTest`)**
-
-📌 **주차 요금 결제 및 할인 적용 검증**
-
-### **📍1. 결제 요청 테스트 (`testProcessPayment`)**
-
-- 💳 **차량의 주차 요금을 결제할 때 정상적으로 처리되는지 검증**
-- **유효하지 않은 차량번호로 결제 시 예외 발생 확인**
-- **입력값 예시**:
-    
-    ```json
-    
-    {
-        "vehicleNumber": "TEST123",
-        "amount": 5000,
-        "couponCode": "WELCOME10"
-    }
-    
-    ```
-    
-- **예상 응답**:
-    
-    ```json
-    
-    {
-        "vehicleNumber": "TEST123",
-        "amount": 4500,
-        "discountApplied": true,
-        "timestamp": "2025-02-14T12:05:00"
-    }
-    
-    ```
-    
-
-### **📍2. 결제 내역 조회 테스트 (`testGetPaymentHistory`)**
-
-- 📜 **특정 차량의 결제 내역을 정상적으로 조회할 수 있는지 검증**
-- **존재하지 않는 차량 조회 시 빈 배열 반환 확인**
-- **입력값 예시**:
-    
-    ```
-    
-    GET /payment/history/TEST123
-    
-    ```
-    
-- **예상 응답**:
-    
-    ```json
-    
-    {
-        "data": [
-            {
-                "vehicleNumber": "TEST123",
-                "amount": 4500,
-                "discountApplied": true,
-                "timestamp": "2025-02-14T12:05:00"
-            }
-        ]
-    }
-    
-    ```
-    
-
----
-
-## 4️⃣ **정기권 컨트롤러 테스트 (`SubscriptionControllerTest`)**
-
-📌 **정기권 등록/취소 및 상태 확인을 검증**
-
-### **📍1. 정기권 등록 테스트 (`testRegisterSubscription`)**
-
-- 🏷 **차량 번호와 기간을 입력하면 정상적으로 정기권이 등록되는지 검증**
-- **이미 정기권이 등록된 차량이 다시 요청할 경우 예외 발생 확인**
-- **입력값 예시**:
-    
-    ```json
-    
-    {
-        "vehicleNumber": "TEST123",
-        "startDate": "2025-02-01",
-        "endDate": "2025-03-01"
-    }
-    
-    ```
-    
-- **예상 응답**:
-    
-    ```json
-    
-    {
-        "vehicleNumber": "TEST123",
-        "startDate": "2025-02-01",
-        "endDate": "2025-03-01"
-    }
-    
-    ```
-    
-
-### **📍2. 정기권 취소 테스트 (`testCancelSubscription`)**
-
-- ❌ **차량 번호를 입력하면 정기권이 정상적으로 삭제되는지 확인**
-- **존재하지 않는 차량의 정기권 취소 요청 시 예외 발생 확인**
-- **입력값 예시**:
-    
-    ```
-    pgsql
-    DELETE /subscription/cancel/TEST123
-    
-    ```
-    
-- **예상 응답**:
-    
-    ```json
-    
-    {
-        "message": "정기권이 취소되었습니다."
-    }
-    
-    ```
-    
-
-### **📍3. 정기권 상태 조회 테스트 (`testCheckSubscriptionStatus`)**
-
-- 📆 **차량 번호로 정기권 상태를 조회하면 정상적으로 반환되는지 확인**
-- **만료된 정기권 차량이 조회될 경우 만료 상태로 반환 확인**
-- **입력값 예시**:
-    
-    ```
-    pgsql
-    GET /subscription/status/TEST123
-    
-    ```
-    
-- **예상 응답 (정기권 보유 시)**:
-    
-    ```json
-    
-    {
-        "vehicleNumber": "TEST123",
-        "status": "ACTIVE",
-        "startDate": "2025-02-01",
-        "endDate": "2025-03-01"
-    }
-    
-    ```
-    
-- **예상 응답 (정기권 없음)**:
-    
-    ```json
-    
-    {
-        "message": "정기권이 없습니다."
-    }
-    
-    ```
-    
-
----
 
 ---
 
 ## 📌 프로젝트 구조
-
-```
-ParkingServiceOnboarding/
- ├── src/main/java/org/dhicc/parkingserviceonboarding/
- │   ├── controller/    # API 컨트롤러
- │   ├── service/       # 서비스(비즈니스 로직)
- │   ├── repository/    # JPA Repo
- │   ├── model/        # Entty
- │   ├── config/       # 설정 파일 (Swagger 포함)
- │   └── dto/          # DTO
- │
- ├── src/test/java/org/dhicc/parkingserviceonboarding/
- │   ├── controller/    # 컨트롤러 테스트
- │   ├── service/       # 서비스 테스트
- │   ├── api/           # Swagger 문서 테스트
- │
- ├── pom.xml           # 의존성 관리
- ├── README.md         # 프로젝트 설명
-```
-
----
