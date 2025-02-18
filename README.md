@@ -7,6 +7,7 @@
 
 ---
 ## ERD
+![ERD 다이어그램](parkingserviceonboardingerd.png)
 
 
 
