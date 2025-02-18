@@ -531,3 +531,63 @@ Parking Service API 명세서
 ---
 
 ## 📌 프로젝트 구조
+<br>
+<br>
+```
+ParkingServiceOnboarding/
+├── src/main/java/org/dhicc/parkingserviceonboarding/
+│   ├── controller/       # API 컨트롤러
+│   │   ├── ParkingController.java
+│   │   ├── SubscriptionController.java
+│   │   ├── PaymentController.java
+│   │   ├── PricingPolicyController.java
+│   ├── service/          # 서비스 (비즈니스 로직)
+│   │   ├── ParkingService.java
+│   │   ├── SubscriptionService.java
+│   │   ├── PaymentService.java
+│   │   ├── DiscountService.java
+│   │   ├── ReceiptService.java (비동기 이벤트)
+│   ├── repository/       # JPA Repository
+│   │   ├── ParkingRecordRepository.java
+│   │   ├── SubscriptionRepository.java
+│   │   ├── PaymentRepository.java
+│   │   ├── DiscountCouponRepository.java
+│   ├── model/            # 엔티티 클래스
+│   │   ├── ParkingRecord.java
+│   │   ├── Subscription.java
+│   │   ├── Payment.java
+│   │   ├── DiscountCoupon.java
+│   │   ├── PricingPolicy.java
+│   ├── dto/              # DTO 클래스
+│   │   ├── ParkingRecordDTO.java
+│   │   ├── PaymentDTO.java
+│   │   ├── SubscriptionDTO.java
+│   │   ├── EmailRequest.java (비동기 이벤트)
+│   ├── event/            # 이벤트 클래스
+│   │   ├── PaymentCompletedEvent.java
+│   ├── config/           # 설정 파일
+│   │   ├── SwaggerConfig.java
+│   │   ├── PricingPolicy.java
+│   ├── ParkingServiceOnboardingApplication.java  # 메인 애플리케이션
+│
+├── src/test/java/org/dhicc/parkingserviceonboarding/
+│   ├── controller/        # 컨트롤러 테스트
+│   │   ├── ParkingControllerTest.java
+│   │   ├── SubscriptionControllerTest.java
+│   │   ├── PaymentControllerTest.java
+│   │   ├── PricingPolicyControllerTest.java
+│   ├── api/               # Swagger 문서 검증 테스트
+│   │   ├── SwaggerApiDocumentationTest.java
+│   ├── integration/       # 통합 테스트
+│   │   ├── IntegrationTest.java
+│   │   ├── EndToEndTest.java
+│
+├── src/main/resources/
+│   ├── application.yml    # Spring Boot 설정 파일
+│   ├── ddl.sql            # DDL (DB 테이블 스키마)
+├── pom.xml                 # Maven 의존성 관리
+├── README.md               # 프로젝트 설명
+├── erd.png                 # ERD 다이어그램
+```
+<br>
+<br>
