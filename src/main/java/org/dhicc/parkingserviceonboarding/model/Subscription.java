@@ -25,4 +25,8 @@ public class Subscription {
 
     @OneToMany(mappedBy = "subscription", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ParkingRecord> parkingRecords;
+
+    @OneToOne
+    @JoinColumn(name = "user_id", unique = true) // 한 명의 User당 하나의 Subscription만 가능
+    private User user;
 }
