@@ -5,6 +5,9 @@ import org.dhicc.parkingserviceonboarding.dto.UserRequest;
 import org.dhicc.parkingserviceonboarding.dto.UserResponse;
 import org.dhicc.parkingserviceonboarding.model.User;
 import org.dhicc.parkingserviceonboarding.reposiotry.UserRepository;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,9 +15,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class UserService {
+public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
+    }
+
 
     public UserResponse registerUser(UserRequest userRequest) {
         if (userRepository.findByUsername(userRequest.getUsername()).isPresent()) {
@@ -32,12 +42,9 @@ public class UserService {
 
         userRepository.save(user);
 
-        UserResponse response = new UserResponse();
-        response.setUsername(user.getUsername());
-        response.setEmail(user.getEmail());
-        response.setRole(user.getRole());
-
-        return response;
+        return new UserResponse(user.getUsername(), user.getEmail(), user.getRole());
     }
+
+
 }
 
