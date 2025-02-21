@@ -24,12 +24,10 @@ public class JwtProvider {
         this.expirationMs = expirationMs;
     }
 
-    /** ✅ UserDetails 기반 JWT 생성 */
     public String generateToken(UserDetails userDetails) {
-        return generateToken(userDetails.getUsername());  // 🔥 `generateToken(String username)` 호출
+        return generateToken(userDetails.getUsername());
     }
 
-    /** ✅ `String username` 기반 JWT 생성 (테스트 코드에서 사용) */
     public String generateToken(String username) {
         return Jwts.builder()
                 .subject(username)
@@ -39,24 +37,16 @@ public class JwtProvider {
                 .compact();
     }
 
-    /** ✅ JWT 토큰 검증 */
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
-                    .build()
-                    .parseSignedClaims(token);
+            Jwts.parser().build().parseSignedClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
-    /** ✅ JWT 토큰에서 사용자 이름 추출 */
     public String getUsernameFromToken(String token) {
-        return Jwts.parser()
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+        return Jwts.parser().build().parseSignedClaims(token).getPayload().getSubject();
     }
 }
