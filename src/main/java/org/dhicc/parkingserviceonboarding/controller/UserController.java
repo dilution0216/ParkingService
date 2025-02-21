@@ -1,19 +1,24 @@
 package org.dhicc.parkingserviceonboarding.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.dhicc.parkingserviceonboarding.dto.UserResponse;
 import org.dhicc.parkingserviceonboarding.service.UserService;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/users") // ✅ `/auth` → `/users` 변경
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
-//    @PostMapping("/register")
-//    public ResponseEntity<UserResponse> registerUser(@RequestBody UserRequest userRequest) {
-//        return ResponseEntity.ok(userService.registerUser(userRequest));
-//    }
+    /** ✅ 1. 로그인한 사용자 정보 조회 */
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        UserResponse userResponse = userService.getUserByUsername(userDetails.getUsername());
+        return ResponseEntity.ok(userResponse);
+    }
 }
