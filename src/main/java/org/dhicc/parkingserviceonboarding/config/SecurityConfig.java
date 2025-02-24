@@ -39,12 +39,14 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/auth/register").permitAll()
-                        .requestMatchers("/users/me").authenticated()
-                        .requestMatchers("/subscription/admin/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/users/me").hasAnyAuthority("ROLE_USER", "ROLE_ADMIN") // ✅ 사용자 본인 정보 조회
+                        .requestMatchers("/entry/**", "/exit/**", "/payments/**", "/parking-records/**").hasAuthority("ROLE_USER") // ✅ 일반 사용자 API 보호
+                        .requestMatchers("/admin/**", "/subscriptions/admin/**", "/payments/admin/**").hasAuthority("ROLE_ADMIN") // ✅ 관리자 API 보호
+                        .requestMatchers(HttpMethod.DELETE, "/users/**").hasAuthority("ROLE_ADMIN") // ✅ 사용자 삭제는 관리자만 가능
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
 }
