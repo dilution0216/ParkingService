@@ -29,6 +29,7 @@ public class SubscriptionController {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "정기권 없음")
     })
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/me")
     public ResponseEntity<SubscriptionDTO> getMySubscription(@AuthenticationPrincipal UserDetails userDetails) {
         SubscriptionDTO subscription = subscriptionService.getSubscriptionByUser(userDetails.getUsername());

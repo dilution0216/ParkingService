@@ -11,6 +11,7 @@ import org.dhicc.parkingserviceonboarding.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,6 +27,7 @@ public class UserController {
     private final UserRepository userRepository;
 
     /** ✅ 1. 로그인한 사용자 정보 조회 */
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         UserResponse userResponse = userService.getUserByUsername(userDetails.getUsername());
@@ -33,6 +35,7 @@ public class UserController {
     }
 
     /** ✅ 2. 특정 ID 사용자 조회 */
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         User user = userService.findById(id)
@@ -42,6 +45,7 @@ public class UserController {
 
 
     /** ✅ 3. 로그인한 사용자 정보 수정 */
+    @PreAuthorize("hasRole('USER')")
     @PatchMapping("/me")
     public ResponseEntity<UserResponse> updateCurrentUser(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -53,6 +57,7 @@ public class UserController {
 
 
     /** ✅ 4. 사용자 삭제 (관리자만 가능) */
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUserById(
             @AuthenticationPrincipal UserDetails userDetails,

@@ -9,6 +9,7 @@ import org.dhicc.parkingserviceonboarding.dto.ParkingRecordDTO;
 import org.dhicc.parkingserviceonboarding.model.ParkingRecord;
 import org.dhicc.parkingserviceonboarding.service.ParkingService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -22,11 +23,13 @@ import java.util.Map;
 public class ParkingController {
     private final ParkingService parkingService;
 
+
     @Operation(summary = "입차 기록 등록", description = "차량이 주차장에 입차할 때 호출")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "입차 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청")
     })
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/entry/{vehicleNumber}")
     public ResponseEntity<ParkingRecord> registerEntry(@PathVariable String vehicleNumber) {
         return ResponseEntity.ok(parkingService.registerEntry(vehicleNumber));
@@ -37,6 +40,7 @@ public class ParkingController {
             @ApiResponse(responseCode = "200", description = "출차 성공"),
             @ApiResponse(responseCode = "400", description = "입차 기록 없음")
     })
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/exit/{vehicleNumber}")
     public ResponseEntity<ParkingRecord> registerExit(@PathVariable String vehicleNumber) {
         return ResponseEntity.ok(parkingService.registerExit(vehicleNumber));
@@ -46,15 +50,11 @@ public class ParkingController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/{vehicleNumber}")
     public List<ParkingRecordDTO> getParkingRecords(@PathVariable String vehicleNumber) {
         return parkingService.getParkingRecords(vehicleNumber);
     }
-
-
-
-
-
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
