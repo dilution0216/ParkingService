@@ -7,6 +7,7 @@ import org.dhicc.parkingserviceonboarding.model.Subscription;
 import org.dhicc.parkingserviceonboarding.model.User;
 import org.dhicc.parkingserviceonboarding.reposiotry.SubscriptionRepository;
 import org.dhicc.parkingserviceonboarding.reposiotry.UserRepository;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
@@ -86,6 +87,7 @@ public class SubscriptionService {
     /**
      * 만료된 정기권을 '만료됨' 상태로 변경
      */
+    @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void expireSubscriptions() {
         LocalDate today = LocalDate.now();
