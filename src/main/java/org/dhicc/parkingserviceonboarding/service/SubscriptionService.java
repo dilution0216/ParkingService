@@ -9,12 +9,15 @@ import org.dhicc.parkingserviceonboarding.reposiotry.SubscriptionRepository;
 import org.dhicc.parkingserviceonboarding.reposiotry.UserRepository;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class SubscriptionService {
+    private static final Logger log = LoggerFactory.getLogger(SubscriptionService.class);
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
 
@@ -59,8 +62,38 @@ public class SubscriptionService {
                 .map(subscription -> new SubscriptionDTO(
                         subscription.getVehicleNumber(),
                         subscription.getStartDate(),
-                        subscription.getEndDate()
+                        subscription.getEndDate(),
+                        user.getId()  // 💡 userId 추가
                 ))
-                .orElse(null);  // 정기권이 없으면 null 반환
+                .orElse(null);
+    }
+
+
+    /**
+     * 만료 예정 정기권 사용자에게 알림을 보냄 (로그 출력)
+     */
+    @Transactional
+    public void notifyExpiringSubscriptions() {
+        LocalDate warningDate = LocalDate.now().plusDays(3);
+        List<Subscription> expiringSubscriptions = subscriptionRepository.findByEndDate(warningDate);
+
+        for (Subscription subscription : expiringSubscriptions) {
+            log.info("🚨 [알림] {} 차량의 정기권이 {}에 만료됩니다.", subscription.getVehicleNumber(), subscription.getEndDate());
+            // TODO: 이메일 발송 기능 추가 가능
+        }
+    }
+
+    /**
+     * 만료된 정기권을 '만료됨' 상태로 변경
+     */
+    @Transactional
+    public void expireSubscriptions() {
+        LocalDate today = LocalDate.now();
+        List<Subscription> expiredSubscriptions = subscriptionRepository.findByEndDateBefore(today);
+
+        for (Subscription subscription : expiredSubscriptions) {
+            log.info("🔴 [만료 처리] {} 차량의 정기권이 만료되었습니다.", subscription.getVehicleNumber());
+            subscriptionRepository.delete(subscription);
+        }
     }
 }

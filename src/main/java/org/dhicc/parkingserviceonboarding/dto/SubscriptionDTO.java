@@ -16,4 +16,5 @@ public class SubscriptionDTO {
     private String vehicleNumber;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Long userId; // 💡 사용자 ID 추가
 }

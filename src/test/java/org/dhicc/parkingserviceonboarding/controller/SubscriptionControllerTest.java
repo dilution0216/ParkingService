@@ -105,6 +105,7 @@ class SubscriptionControllerTest {
                 .andExpect(jsonPath("$.vehicleNumber").value("ABC123"));
     }
 
+
     /** ✅ 2. 정기권 등록 테스트 (ROLE_USER만 가능) */
     @Test
     void testRegisterSubscription() throws Exception {
@@ -112,7 +113,7 @@ class SubscriptionControllerTest {
 
         subscriptionRepository.deleteAll(); // ✅ 중복 데이터 방지
 
-        SubscriptionDTO request = new SubscriptionDTO("XYZ999", LocalDate.now(), LocalDate.now().plusMonths(1));
+        SubscriptionDTO request = new SubscriptionDTO("XYZ999", LocalDate.now(), LocalDate.now().plusMonths(1), testUserId);
 
         mockMvc.perform(post("/subscription/register")
                         .header(HttpHeaders.AUTHORIZATION, userToken)
@@ -121,6 +122,7 @@ class SubscriptionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vehicleNumber").value("XYZ999"));
     }
+
 
     /** ✅ 3. 정기권 취소 테스트 (ROLE_ADMIN만 가능) */
     @Test

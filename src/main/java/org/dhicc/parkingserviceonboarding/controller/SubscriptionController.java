@@ -46,7 +46,9 @@ public class SubscriptionController {
     })
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/register")
-    public ResponseEntity<?> registerSubscription(@AuthenticationPrincipal UserDetails userDetails, @RequestBody SubscriptionDTO subscriptionDTO) {
+    public ResponseEntity<?> registerSubscription(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody SubscriptionDTO subscriptionDTO) {
         try {
             Subscription subscription = subscriptionService.registerSubscription(
                     userDetails.getUsername(),
@@ -54,16 +56,21 @@ public class SubscriptionController {
                     subscriptionDTO.getStartDate(),
                     subscriptionDTO.getEndDate()
             );
+
+            // 💡 userId를 포함한 SubscriptionDTO 생성
             SubscriptionDTO responseDTO = new SubscriptionDTO(
                     subscription.getVehicleNumber(),
                     subscription.getStartDate(),
-                    subscription.getEndDate()
+                    subscription.getEndDate(),
+                    subscription.getUser().getId()  // 🚀 userId 추가!
             );
+
             return ResponseEntity.ok(responseDTO);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(409).body(Collections.singletonMap("error", e.getMessage()));
         }
     }
+
 
     @Operation(summary = "정기권 취소 (관리자만 가능)", description = "차량 번호를 이용해 정기권을 취소 (관리자 권한 필요)")
     @ApiResponses(value = {
