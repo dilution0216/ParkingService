@@ -1,5 +1,6 @@
 package org.dhicc.parkingserviceonboarding.controller;
 
+import jakarta.validation.Valid;
 import org.dhicc.parkingserviceonboarding.dto.UserRequest;
 import org.dhicc.parkingserviceonboarding.security.JwtUtil;
 import org.dhicc.parkingserviceonboarding.service.UserService;
@@ -29,7 +30,7 @@ public class AuthController {
 
     /** ✅ 1. 회원가입 API */
     @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody UserRequest userRequest) {
+    public ResponseEntity<String> registerUser(@Valid @RequestBody UserRequest userRequest) {
         userService.registerUser(userRequest);
         return ResponseEntity.ok("회원가입이 완료되었습니다.");
     }
