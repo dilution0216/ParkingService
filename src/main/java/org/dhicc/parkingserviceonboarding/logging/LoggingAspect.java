@@ -12,9 +12,11 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Aspect
 @Component
@@ -25,6 +27,7 @@ public class LoggingAspect {
     private final ObjectMapper objectMapper;
     private final HttpServletRequest request;
     private final HttpServletResponse response;
+    private final LoggingRepository loggingRepository;
 
     @Around("execution(* org.dhicc.parkingserviceonboarding.controller..*(..))")
     public Object logApiRequestResponse(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -33,14 +36,13 @@ public class LoggingAspect {
         int statusCode = 500;
 
         try {
-            // 요청 정보 로깅
             logRequest(joinPoint);
             result = joinPoint.proceed();
             statusCode = response.getStatus();
             return result;
         } finally {
             long elapsedTime = System.currentTimeMillis() - startTime;
-            logResponse(result, statusCode, elapsedTime);
+            logResponse(joinPoint, result, statusCode, elapsedTime);
         }
     }
 
@@ -59,10 +61,31 @@ public class LoggingAspect {
         }
     }
 
-    private void logResponse(Object result, int statusCode, long elapsedTime) {
+    private void logResponse(ProceedingJoinPoint joinPoint, Object result, int statusCode, long elapsedTime) {
         try {
+            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+            String method = request.getMethod();
+            String uri = request.getRequestURI();
             String responseBody = objectMapper.writeValueAsString(result);
-            log.info("[API 응답] Status: {} | Response: {} | 처리 시간: {}ms", statusCode, responseBody, elapsedTime);
+
+            log.info("[API 응답] {} {} | Status: {} | Response: {} | 처리 시간: {}ms",
+                    method, uri, statusCode, responseBody, elapsedTime);
+
+            // Elasticsearch에 저장
+            LoggingDocument logEntry = LoggingDocument.builder()
+                    .id(UUID.randomUUID().toString())
+                    .method(method)
+                    .uri(uri)
+                    .headers(getHeaders(request))
+                    .requestBody(objectMapper.writeValueAsString(joinPoint.getArgs()))
+                    .statusCode(statusCode)
+                    .responseBody(responseBody)
+                    .elapsedTime(elapsedTime)
+                    .timestamp(Instant.now())
+                    .build();
+
+            loggingRepository.save(logEntry);
+
         } catch (Exception e) {
             log.error("[API 응답 로깅 오류]", e);
         }
@@ -82,7 +105,4 @@ public class LoggingAspect {
     public void logException(Exception ex) {
         log.error("[API 오류 발생] {}: {}", ex.getClass().getSimpleName(), ex.getMessage(), ex);
     }
-
 }
-
-
