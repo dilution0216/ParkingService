@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.dhicc.parkingserviceonboarding.model.DiscountCoupon;
 import org.dhicc.parkingserviceonboarding.service.DiscountService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 
@@ -28,6 +29,7 @@ public class DiscountController {
             @ApiResponse(responseCode = "200", description = "할인 적용 완료"),
             @ApiResponse(responseCode = "400", description = "유효하지 않은 쿠폰 코드")
     })
+    @PreAuthorize("hasRole('USER')")
     @PostMapping("/apply/{couponCode}/{fee}")
     public ResponseEntity<Map<String, Integer>> applyDiscount(@PathVariable String couponCode, @PathVariable int fee) {
         int discountedFee = discountService.applyDiscount(couponCode, fee);
@@ -42,6 +44,7 @@ public class DiscountController {
             @ApiResponse(responseCode = "200", description = "쿠폰 생성 완료"),
             @ApiResponse(responseCode = "400", description = "이미 존재하는 쿠폰 코드")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/create")
     public ResponseEntity<DiscountCoupon> createCoupon(@RequestBody DiscountCoupon coupon) {
         return ResponseEntity.ok(discountService.createCoupon(coupon));
@@ -49,6 +52,7 @@ public class DiscountController {
 
     @Operation(summary = "할인 쿠폰 목록 조회", description = "모든 할인 쿠폰을 조회")
     @ApiResponse(responseCode = "200", description = "쿠폰 목록 조회 성공")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<List<DiscountCoupon>> getAllCoupons() {
         return ResponseEntity.ok(discountService.getAllCoupons());
