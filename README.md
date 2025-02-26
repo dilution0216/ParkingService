@@ -1,533 +1,194 @@
-# Parking Service Onboarding
+차량 입출차 기록을 기반으로 주차 요금을 계산하고, 결제 및 정기권 관리 기능 등을 제공하는 서비스
 
-## 📌 프로젝트 개요
+# 프로젝트 설정 및 실행 방법
 
-**Parking Service Onboarding**은 차량 주차 및 정기권 관리 시스템을 위한 API를 제공
-차량의 입차/출차, 요금 계산, 정기권 등록/취소 등의 기능을 갖고 있음
+## 1. **필수 환경**
 
----
-## ERD
-![ERD 다이어그램](parkingserviceonboardingerd.png)
+- **Backend:** Java 17, Spring Boot 3.4.2
+- **Security:** Spring Security, JWT (JSON Web Token)
+- **Database:**PostgreSQL (운영 환경), H2 (테스트 환경 일부)
+- **Elasticsearch & Kibana:** API Logging 및 모니터링
+- **Async Processing:** Spring Event (비동기 영수증 발송)
+- **Testing:** JUnit, Mockito, Testcontainers
+- **Maven**
 
+## 2. **프로젝트 실행 방법 (수정해야 함)**
 
+```bash
+# 1. 프로젝트 클론
+git clone https://github.com/your-repo/parking-service.git
+cd parking-service
 
+# 2. PostgreSQL 실행 (Docker 사용)
+docker run --name parking-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=1234 -e POSTGRES_DB=mydb -p 5432:5432 -d postgres
 
+# 3. Elasticsearch 실행 (Docker 사용)
+docker run --name elasticsearch -p 9200:9200 -e "discovery.type=single-node" -d docker.elastic.co/elasticsearch/elasticsearch:8.12.2
 
-## 🚀 프로젝트 설정 및 실행 방법
+# 4. Kibana 실행 (Docker 사용)
+docker run --name kibana --link elasticsearch:elasticsearch -p 5601:5601 -d docker.elastic.co/kibana/kibana:8.12.2
 
-### 1️⃣ **필수 환경**
+# 5. 환경 변수 설정 (.env 또는 application.properties)
+# spring.datasource.url=jdbc:postgresql://localhost:5432/mydb
+# spring.datasource.username=postgres
+# spring.datasource.password=1234
 
-- Java 17
-- Maven
-- PostgreSQL (운영 환경), H2 (테스트 환경)
-
-### 2️⃣ **프로젝트 실행 방법**
-
-```
-# 프로젝트 빌드
-mvn clean package
-
-# 애플리케이션 실행
+# 6. 프로젝트 실행
 mvn spring-boot:run
-```
-
-### 3️⃣ **테스트 실행**
-
-```
-mvn test
-```
-
----
-
-## 🛠 API 명세 (Swagger 문서) - 로컬에서 사용
-
-### Swagger UI 접근 URL:
-
-```
-http://localhost:8080/swagger-ui/index.html
-```
-
-### OpenAPI JSON 문서:
-
-```
-http://localhost:8080/v3/api-docs
-```
-
----
-
-## 📌 주요 API 목록
-Parking Service API 명세서
-## 🏷 **1. 주차 관리 API** (`/parking`)
-
-🚗 **차량의 입차/출차 기록을 관리하는 API**
-
-### ✅ **1-1. 입차 기록 등록**
-
-- **URL**: `POST /parking/entry/{vehicleNumber}`
-- **설명**: 차량이 주차장에 입차할 때 호출
-- **응답 예시**:
-
-```json
-
-{
-    "vehicleNumber": "TEST123",
-    "entryTime": "2025-02-14T10:00:00"
-}
 
 ```
 
----
+### 3. ERD
 
-### ✅ **1-2. 출차 기록 등록**
+![parkingserviceonboardingerd.png](attachment:eaa76c64-04d8-4656-ae8b-53825b306627:parkingserviceonboardingerd.png)
 
-- **URL**: `POST /parking/exit/{vehicleNumber}`
-- **설명**: 차량이 주차장에서 출차할 때 호출
-- **응답 예시**:
+## 4. 주요 기능과 특징
 
-```json
+### ✅  **회원 관리 (User Management)**
 
-{
-    "vehicleNumber": "TEST123",
-    "entryTime": "2025-02-14T10:00:00",
-    "exitTime": "2025-02-14T12:00:00",
-    "fee": 5000
-}
+- **회원가입 API**: 일반 사용자와 관리자를 등록 가능
+- **로그인 API (JWT 인증)**: 로그인 후 JWT 토큰 발급
+- **사용자 정보 수정**: 로그인한 사용자는 자신의 정보를 수정 가능
+- **사용자 삭제**: 관리자는 특정 사용자를 삭제할 수 있음
+- **정기권 차량 제한**: 일반 사용자는 **최대 1개의 정기권 차량만 소유 가능**
 
-```
+### ✅  **주차 관리 (Parking Management)**
 
----
+- **입차 등록 API**: 차량이 주차장에 들어올 때 등록
+- **출차 등록 API**: 차량이 출차할 때 등록 (요금 자동 계산)
+- **입출차 기록 조회**: 차량 번호로 주차 이력을 확인 가능
 
-### ✅ **1-3. 주차 기록 조회**
+### ✅  **주차 요금 계산 (Parking Fee Calculation)**
 
-- **URL**: `GET /parking/{vehicleNumber}`
-- **설명**: 차량 번호로 입출차 기록을 조회
-- **응답 예시**:
+- **기본 요금**: 최초 30분은 1,000원
+- **추가 요금**: 이후 10분당 500원
+- **일일 최대 요금**: 15,000원
+- **야간 할인**: 23:00 ~ 07:00 사이 입출차 차량 20% 할인
+- **주말 할인**: 토·일요일 10% 할인
+- **정기권 차량**: 주차 요금 무료
+- **장기 주차 제한**: **최대 3일치 요금까지만 부과**
+- **할인 쿠폰 적용 가능**: 10% ~ 50% 할인 쿠폰 적용 가능
 
-```json
+### ✅  **결제 시스템 (Payment System)**
 
-{
-    "data": [
-        {
-            "vehicleNumber": "TEST123",
-            "entryTime": "2025-02-14T10:00:00",
-            "exitTime": "2025-02-14T12:00:00",
-            "fee": 5000
-        }
-    ]
-}
+- **출차 시 요금 결제 API**: 차량 번호로 결제 가능
+- **결제 내역 조회 API**: 사용자별 결제 기록 조회
+- **관리자 전체 결제 내역 조회 API**
+- **비동기 영수증 발송**: 결제 완료 시 **이메일 발송 (Mock API 연동)**
 
-```
+### ✅  **정기권 관리 (Subscription Management)**
 
----
+- **정기권 등록 API**: 사용자는 정기권을 등록 가능
+- **정기권 차량 무료 처리**: 정기권이 적용된 차량은 요금 부과 없음
+- **정기권 만료 자동 삭제**: 만료된 정기권을 자동으로 삭제하는 **스케줄러 적용**
 
-## 🏷 **2. 정기권 관리 API** (`/subscription`)
+### ✅  **할인 쿠폰 시스템 (Discount System)**
 
-📜 **정기권 등록/취소를 관리하는 API**
+- **할인 쿠폰 생성 API (관리자)**
+- **할인 쿠폰 적용 API**
+- **할인 쿠폰 조회 API**
 
-### ✅ **2-1. 정기권 등록**
+### ✅  **API 요청 로깅 및 모니터링 (AOP 기반 Logging + ELK Stack)**
 
-- **URL**: `POST /subscription/register`
-- **설명**: 차량 번호와 기간을 입력해 정기권을 등록
-- **요청 예시**:
+- **Spring AOP를 활용한 API 요청/응답 로깅**
+- **Elasticsearch에 API 요청/응답 저장**
+- **Kibana 대시보드 연동 (API 호출 분석 가능)**
 
-```json
+### ✅  **보안 및 인증 (Security & Authentication)**
 
-{
-    "vehicleNumber": "TEST123",
-    "startDate": "2025-02-01",
-    "endDate": "2025-03-01"
-}
+- **JWT 기반 인증**: 로그인 시 JWT 토큰 발급 및 검증
+- **Spring Security 적용**: 권한(Role)에 따라 접근 제한
+- **BCrypt를 사용한 패스워드 암호화**
 
-```
+### ✅  **스케줄링 (Scheduled Tasks)**
 
-- **응답 예시**:
+- **매일 정기권 만료 확인 및 자동 삭제**
+- **7일 이상 지난 주차 기록 자동 삭제**
 
-```json
+## 5. API 문서
 
-{
-    "vehicleNumber": "TEST123",
-    "startDate": "2025-02-01",
-    "endDate": "2025-03-01"
-}
+Application 실행 후 Swagger URL 로 확인 가능
 
-```
+**Swagger URL:** `http://localhost:8080/swagger-ui.html`
 
----
+### **회원 관련 API (`/auth`, `/users`)**
 
-### ✅ **2-2. 정기권 취소**
-
-- **URL**: `DELETE /subscription/cancel/{vehicleNumber}`
-- **설명**: 차량 번호를 이용해 정기권을 취소
-- **응답 예시**:
-
-```json
-
-{
-    "message": "정기권이 취소되었습니다."
-}
-
-```
+| API | HTTP Method | 요청 경로 | 요청 데이터 | 응답 데이터 | 권한 |
+| --- | --- | --- | --- | --- | --- |
+| 회원가입 | `POST` | `/auth/register` | `UserRequest (username, password, email, role)` | `"회원가입이 완료되었습니다."` | 누구나 |
+| 로그인 (JWT 발급) | `POST` | `/auth/login` | `username, password` | `{ "token": "JWT토큰" }` | 누구나 |
+| 현재 로그인한 사용자 조회 | `GET` | `/users/me` | `JWT 필요` | `UserResponse (username, email, role)` | 사용자, 관리자 |
+| 특정 사용자 조회 | `GET` | `/users/{id}` | `JWT 필요` | `UserResponse (username, email, role)` | 관리자 |
+| 회원 정보 수정 | `PATCH` | `/users/me` | `UserUpdateRequest (username, email)` | `UserResponse` | 사용자 |
+| 회원 삭제 | `DELETE` | `/users/{id}` | `JWT 필요` | `204 No Content` | 관리자 |
 
 ---
 
-## 🏷 **3. 결제 관리 API** (`/payment`)
+### **주차 관련 API (`/parking`)**
 
-💳 **출차 후 요금 결제 및 조회 기능을 제공하는 API**
-
-### ✅ **3-1. 결제 요청**
-
-- **URL**: `POST /payment/process/{vehicleNumber}`
-- **설명**: 차량의 출차 기록을 바탕으로 결제를 진행
-- **요청 예시**:
-
-```json
-
-{
-    "couponCode": "DISCOUNT50"
-}
-
-```
-
-- **응답 예시**:
-
-```json
-
-{
-    "vehicleNumber": "TEST123",
-    "amount": 2500,
-    "discountDetails": "쿠폰 할인 적용: DISCOUNT50 (50%)",
-    "timestamp": "2025-02-14T12:01:00"
-}
-
-```
+| API | HTTP Method | 요청 경로 | 요청 데이터 | 응답 데이터 | 권한 |
+| --- | --- | --- | --- | --- | --- |
+| 입차 기록 등록 | `POST` | `/parking/entry/{vehicleNumber}` | `차량번호` | `ParkingRecord` | 사용자 |
+| 출차 기록 등록 | `POST` | `/parking/exit/{vehicleNumber}` | `차량번호` | `ParkingRecord (요금 포함)` | 사용자 |
+| 주차 기록 조회 | `GET` | `/parking/{vehicleNumber}` | `차량번호` | `List<ParkingRecordDTO>` | 사용자, 관리자 |
 
 ---
 
-### ✅ **3-2. 결제 내역 조회**
+### **결제 관련 API (`/payment`)**
 
-- **URL**: `GET /payment/{paymentId}`
-- **설명**: 특정 결제 ID로 결제 내역을 조회
-- **응답 예시**:
-
-```json
-
-{
-    "vehicleNumber": "TEST123",
-    "amount": 5000,
-    "timestamp": "2025-02-14T12:01:00"
-}
-
-```
+| API | HTTP Method | 요청 경로 | 요청 데이터 | 응답 데이터 | 권한 |
+| --- | --- | --- | --- | --- | --- |
+| 결제 처리 | `POST` | `/payment/process/{vehicleNumber}` | `차량번호, (옵션) 할인쿠폰` | `Payment (결제 금액, 할인 정보 포함)` | 사용자 |
+| 특정 결제 내역 조회 | `GET` | `/payment/{id}` | `결제 ID` | `Payment` | 사용자 |
+| 전체 결제 내역 조회 | `GET` | `/payment/all` | 없음 | `List<Payment>` | 관리자 |
 
 ---
 
-### ✅ **3-3. 모든 결제 내역 조회**
+### **정기권 관련 API (`/subscription`)**
 
-- **URL**: `GET /payment/all`
-- **설명**: 전체 결제 내역을 조회
-- **응답 예시**:
-
-```json
-
-{
-    "payments": [
-        {
-            "vehicleNumber": "TEST123",
-            "amount": 5000,
-            "timestamp": "2025-02-14T12:01:00"
-        },
-        {
-            "vehicleNumber": "TEST456",
-            "amount": 3000,
-            "timestamp": "2025-02-14T14:20:00"
-        }
-    ]
-}
-
-```
+| API | HTTP Method | 요청 경로 | 요청 데이터 | 응답 데이터 | 권한 |
+| --- | --- | --- | --- | --- | --- |
+| 내 정기권 조회 | `GET` | `/subscription/me` | `JWT 필요` | `SubscriptionDTO` | 사용자 |
+| 정기권 등록 | `POST` | `/subscription/register` | `SubscriptionDTO (차량번호, 시작일, 종료일)` | `SubscriptionDTO` | 사용자 |
+| 정기권 취소 | `DELETE` | `/subscription/admin/{vehicleNumber}` | `차량번호` | `"정기권이 취소되었습니다."` | 관리자 |
 
 ---
 
-## 🏷 **4. 비동기 결제 정산 & 영수증 발송 API** (`/receipt`)
+### **요금 정책 관련 API (`/pricing-policy`)**
 
-📧 **결제 완료 시 이벤트 기반으로 자동 실행**
-
-### ✅ **4-1. 결제 완료 후 영수증 발송 이벤트 발생**
-
-- **이벤트 트리거**: `PaymentCompletedEvent`
-- **자동 실행 API**: `ReceiptService.sendReceiptEmail()`
-- **요청 데이터 (이벤트 기반)**
-
-```json
-
-{
-    "vehicleNumber": "TEST123",
-    "amount": 2500,
-    "timestamp": "2025-02-14T12:01:00"
-}
-
-```
-
-- **Mock API 응답**
-
-```json
-
-{
-    "message": "비동기 영수증 이메일 발송 완료 (Mock API 호출)"
-}
-
-```
+| API | HTTP Method | 요청 경로 | 요청 데이터 | 응답 데이터 | 권한 |
+| --- | --- | --- | --- | --- | --- |
+| 현재 요금 정책 조회 | `GET` | `/pricing-policy` | 없음 | `PricingPolicy` | 누구나 |
+| 요금 정책 변경 | `PUT` | `/pricing-policy` | `새로운 PricingPolicy` | `"요금 정책 변경됨"` | 관리자 |
 
 ---
 
-## 🏷 **5. 요금 정책 관리 API** (`/pricing-policy`)
+### **할인 쿠폰 관련 API (`/discount`)**
 
-⚙ **관리자가 동적으로 요금 정책을 설정할 수 있는 API**
-
-### ✅ **5-1. 요금 정책 조회**
-
-- **URL**: `GET /pricing-policy`
-- **설명**: 현재 적용된 요금 정책을 조회
-- **응답 예시**:
-
-```json
-
-{
-    "baseFee": 1000,
-    "extraFeePer10Min": 500,
-    "dailyMaxFee": 15000,
-    "maxDaysCharged": 3,
-    "nightDiscount": 0.2,
-    "weekendDiscount": 0.1
-}
-
-```
+| API | HTTP Method | 요청 경로 | 요청 데이터 | 응답 데이터 | 권한 |
+| --- | --- | --- | --- | --- | --- |
+| 할인 적용 | `POST` | `/discount/apply/{couponCode}/{fee}` | `쿠폰코드, 원래 요금` | `{ "discountedFee": 최종요금 }` | 사용자 |
+| 할인 쿠폰 생성 | `POST` | `/discount/create` | `DiscountCoupon` | `DiscountCoupon` | 관리자 |
+| 할인 쿠폰 목록 조회 | `GET` | `/discount/all` | 없음 | `List<DiscountCoupon>` | 관리자 |
 
 ---
 
-### ✅ **5-2. 요금 정책 변경**
+## 6. **Kibana에서 API 로그 확인 방법**
 
-- **URL**: `PUT /pricing-policy`
-- **설명**: 관리자가 요금 정책을 변경할 수 있음
-- **요청 예시**:
+사전작업 : Docker Compose 파일 생성 → Logstash 설정 (Elasticsearch로 로그 전송) → Docker 컨테이너 실행
 
-```json
+1. `http://localhost:5601` 접속 후 Kibana 실행
+2. **"Stack Management" → "Index Patterns"** 로 이동
+3. `api-logs*` 패턴을 생성하고, `timestamp` 필드를 **Time Filter**로 설정
+4. **Discover 탭**에서 API 요청 및 응답 로그 확인 가능
 
-{
-    "baseFee": 1200,
-    "extraFeePer10Min": 600,
-    "dailyMaxFee": 18000,
-    "maxDaysCharged": 5,
-    "nightDiscount": 0.25,
-    "weekendDiscount": 0.15
-}
+![KinabaDashBoardwithELK.PNG](attachment:102f8c38-455d-440c-8c22-d8794657a710:KinabaDashBoardwithELK.png)
 
-```
+## **7. 프로젝트 특징**
 
-- **응답 예시**:
-
-```json
-
-{
-    "oldPolicy": {
-        "baseFee": 1000,
-        "extraFeePer10Min": 500,
-        "dailyMaxFee": 15000,
-        "nightDiscount": 0.2,
-        "weekendDiscount": 0.1
-    },
-    "newPolicy": {
-        "baseFee": 1200,
-        "extraFeePer10Min": 600,
-        "dailyMaxFee": 18000,
-        "nightDiscount": 0.25,
-        "weekendDiscount": 0.15
-    }
-}
-
-```
-
----
-
-
-
-
-
-🛠 테스트 API 명세서
----
-## ✅ **1. 주차 관리 테스트** (`/parking`)
-
-📌 **주차 입출차 및 기록 조회 테스트**
-
-### 🔹 **1-1. 입차 테스트**
-
-- **테스트명**: `testRegisterEntry()`
-- **설명**: 차량이 정상적으로 입차되는지 테스트
-- **입력값**:
-    - `vehicleNumber`: `"TEST123"`
-- **검증 내용**:
-    - 입차 시간이 정상적으로 저장되는지 확인
-    - 저장된 차량 번호가 입력값과 일치하는지 확인
-
----
-
-### 🔹 **1-2. 출차 테스트**
-
-- **테스트명**: `testRegisterExit()`
-- **설명**: 차량이 정상적으로 출차되고 요금이 계산되는지 테스트
-- **입력값**:
-    - `vehicleNumber`: `"TEST123"`
-- **검증 내용**:
-    - 출차 시간이 정상적으로 저장되는지 확인
-    - 요금이 0보다 큰 값으로 계산되는지 확인
-
----
-
-### 🔹 **1-3. 주차 기록 조회 테스트**
-
-- **테스트명**: `testGetParkingRecords()`
-- **설명**: 특정 차량의 입출차 기록이 정상적으로 조회되는지 테스트
-- **입력값**:
-    - `vehicleNumber`: `"TEST123"`
-- **검증 내용**:
-    - 반환된 데이터 리스트가 비어있지 않은지 확인
-    - 입차, 출차 시간 및 요금 정보가 올바르게 포함되어 있는지 확인
-
----
-
-## ✅ **2. 정기권 관리 테스트** (`/subscription`)
-
-📌 **정기권 등록 및 취소 테스트**
-
-### 🔹 **2-1. 정기권 등록 테스트**
-
-- **테스트명**: `testRegisterSubscription()`
-- **설명**: 차량에 정기권이 정상적으로 등록되는지 테스트
-- **입력값**:
-    - `vehicleNumber`: `"TEST123"`
-    - `startDate`: `"2025-02-01"`
-    - `endDate`: `"2025-03-01"`
-- **검증 내용**:
-    - 정기권 정보가 올바르게 저장되었는지 확인
-    - 시작일과 종료일이 요청값과 일치하는지 확인
-
----
-
-### 🔹 **2-2. 정기권 취소 테스트**
-
-- **테스트명**: `testCancelSubscription()`
-- **설명**: 차량 정기권이 정상적으로 취소되는지 테스트
-- **입력값**:
-    - `vehicleNumber`: `"TEST123"`
-- **검증 내용**:
-    - 해당 차량의 정기권이 데이터베이스에서 삭제되었는지 확인
-
----
-
-## ✅ **3. 결제 관리 테스트** (`/payment`)
-
-📌 **출차 후 결제 및 내역 조회 테스트**
-
-### 🔹 **3-1. 결제 요청 테스트**
-
-- **테스트명**: `testProcessPayment()`
-- **설명**: 차량 출차 후 요금이 정상적으로 결제되는지 테스트
-- **입력값**:
-    - `vehicleNumber`: `"TEST123"`
-    - `couponCode`: `"DISCOUNT50"`
-- **검증 내용**:
-    - 결제 내역이 정상적으로 생성되었는지 확인
-    - 할인 적용 후 최종 결제 금액이 올바르게 계산되었는지 확인
-
----
-
-### 🔹 **3-2. 결제 내역 조회 테스트**
-
-- **테스트명**: `testGetPaymentById()`
-- **설명**: 특정 결제 ID로 결제 내역을 조회하는 테스트
-- **입력값**:
-    - `paymentId`: `"1"`
-- **검증 내용**:
-    - 반환된 결제 내역이 요청한 결제 ID와 일치하는지 확인
-    - 결제 금액과 차량 번호가 올바르게 포함되었는지 확인
-
----
-
-## ✅ **4. 비동기 결제 정산 & 영수증 발송 테스트** (`/receipt`)
-
-📌 **결제 완료 후 이벤트 기반 비동기 영수증 발송 테스트**
-
-### 🔹 **4-1. 영수증 발송 테스트**
-
-- **테스트명**: `testSendReceiptEmail()`
-- **설명**: 결제 완료 후 비동기 이벤트가 정상적으로 처리되는지 테스트
-- **입력값**:
-    - `vehicleNumber`: `"TEST123"`
-    - `amount`: `2500`
-    - `timestamp`: `"2025-02-14T12:01:00"`
-- **검증 내용**:
-    - Mock API를 활용해 이메일 발송이 정상적으로 수행되는지 확인
-    - 로그 출력 결과를 확인하여 이메일 전송 완료 여부 체크
-
----
-
-## ✅ **5. 요금 정책 관리 테스트** (`/pricing-policy`)
-
-📌 **관리자가 요금 정책을 변경할 수 있는지 테스트**
-
-### 🔹 **5-1. 요금 정책 조회 테스트**
-
-- **테스트명**: `testGetPricingPolicy()`
-- **설명**: 현재 적용된 요금 정책을 올바르게 조회하는지 테스트
-- **검증 내용**:
-    - 기본 요금, 추가 요금, 최대 요금 등 정책 값들이 정확한지 확인
-
----
-
-### 🔹 **5-2. 요금 정책 변경 테스트**
-
-- **테스트명**: `testUpdatePricingPolicy()`
-- **설명**: 관리자가 요금 정책을 변경할 수 있는지 테스트
-- **입력값**:
-
-```json
-
-{
-    "baseFee": 1200,
-    "extraFeePer10Min": 600,
-    "dailyMaxFee": 18000,
-    "maxDaysCharged": 5,
-    "nightDiscount": 0.25,
-    "weekendDiscount": 0.15
-}
-
-```
-
-- **검증 내용**:
-    - 정책 변경 후 `GET /pricing-policy` 호출 시 업데이트된 값이 반영되는지 확인
-    - 이전 정책과 변경된 정책을 비교하여 정상적으로 변경되었는지 체크
-
----
-
-## ✅ **6. End-to-End 테스트** (`E2E`)
-
-📌 **모든 기능이 실제 프로세스에서 정상적으로 동작하는지 확인하는 통합 테스트**
-
-### 🔹 **6-1. 전체 프로세스 테스트**
-
-- **테스트명**: `testFullParkingProcess()`
-- **설명**: 차량 입차 → 출차 → 결제 → 영수증 발송 → 정기권 등록까지 전체 프로세스를 검증
-- **검증 내용**:
-    - 입차 기록이 정상적으로 생성되는지 확인
-    - 출차 시 요금이 계산되는지 확인
-    - 결제가 정상적으로 처리되는지 확인
-    - 이벤트 기반 영수증 발송이 정상적으로 수행되는지 확인
-    - 정기권이 정상적으로 등록되는지 확인
-
-
-
-
-
----
-
-## 📌 프로젝트 구조
+- **AOP 기반 API 요청 로깅**으로 **모든 API 요청 및 응답을 기록**
+- **Kibana 대시보드**를 통해 API 호출 통계를 한눈에 확인 가능
+- **요금 정책을 동적으로 변경할 수 있는 API 지원**
+- **JWT 인증과 역할(Role) 기반 접근 제어**로 보안 강화
+- **비동기 이벤트 기반 영수증 발송 시스템 구현**
+- **스케줄링 기능을 통해 정기권 및 주차 기록 자동 관리**
