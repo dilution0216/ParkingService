@@ -19,8 +19,37 @@
 git clone https://github.com/your-repo/parking-service.git
 cd parking-service
 
-# 2. PostgreSQL 실행 (Docker 사용)
-docker run --name parking-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=1234 -e POSTGRES_DB=mydb -p 5432:5432 -d postgres
+# 2. application.properties 작성 (로컬 db 연결 )
+ex)
+
+spring.application.name=ParkingServiceOnboarding
+
+# PostgreSQL
+spring.datasource.url=jdbc:postgresql://localhost:5432/mydb
+spring.datasource.username=postgres
+spring.datasource.password=????
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+
+
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.api-docs.enabled=true
+springdoc.swagger-ui.enabled=true
+springdoc.swagger-ui.operationsSorter=method
+
+spring.web.resources.add-mappings=false
+
+jwt.secret=xJ3R2n1L8G5U8H3c+PzJb9MmY8ZlU5vPg1MlVpZ3NzU=
+jwt.expiration=86400000
+
+spring.elasticsearch.uris=http://localhost:9200
+spring.elasticsearch.username=elastic
+spring.elasticsearch.password=?????
 
 # 3. Elasticsearch 실행 (Docker 사용)
 docker run --name elasticsearch -p 9200:9200 -e "discovery.type=single-node" -d docker.elastic.co/elasticsearch/elasticsearch:8.12.2
@@ -40,7 +69,8 @@ mvn spring-boot:run
 
 ### 3. ERD
 
-![parkingserviceonboardingerd.png](attachment:eaa76c64-04d8-4656-ae8b-53825b306627:parkingserviceonboardingerd.png)
+![parkingserviceonboardingerd.png](parkingserviceonboardingerd.png)
+![이미지 설명](images/example.png)
 
 ## 4. 주요 기능과 특징
 
