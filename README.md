@@ -71,7 +71,7 @@ mvn spring-boot:run
 
 ![parkingserviceonboardingerd.png](parkingserviceonboardingerd.png)
 
-## 4. 주요 기능과 특징
+## 4. 주요 기능
 
 ### ✅  **회원 관리 (User Management)**
 
