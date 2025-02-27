@@ -12,7 +12,7 @@
 - **Testing:** JUnit, Mockito, Testcontainers
 - **Maven**
 
-## 2. **프로젝트 실행 방법 (수정해야 함)**
+## 2. **프로젝트 실행 방법**
 
 ```bash
 # 1. 프로젝트 클론
