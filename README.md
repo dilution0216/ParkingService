@@ -212,6 +212,7 @@ Application 실행 후 Swagger URL 로 확인 가능
 4. **Discover 탭**에서 API 요청 및 응답 로그 확인 가능
 
 ![KinabaDashBoardwithELK.PNG](KinabaDashBoardwithELK.PNG)
+단위test 실행 후 kibana에 기록된 api log
 
 ## **7. 프로젝트 특징**
 
