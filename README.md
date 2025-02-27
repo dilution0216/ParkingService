@@ -70,7 +70,6 @@ mvn spring-boot:run
 ### 3. ERD
 
 ![parkingserviceonboardingerd.png](parkingserviceonboardingerd.png)
-![이미지 설명](images/example.png)
 
 ## 4. 주요 기능과 특징
 
@@ -212,7 +211,7 @@ Application 실행 후 Swagger URL 로 확인 가능
 3. `api-logs*` 패턴을 생성하고, `timestamp` 필드를 **Time Filter**로 설정
 4. **Discover 탭**에서 API 요청 및 응답 로그 확인 가능
 
-![KinabaDashBoardwithELK.PNG](attachment:102f8c38-455d-440c-8c22-d8794657a710:KinabaDashBoardwithELK.png)
+![KinabaDashBoardwithELK.PNG](KinabaDashBoardwithELK.PNG)
 
 ## **7. 프로젝트 특징**
 
