@@ -7,6 +7,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+//test
 public class DiscountCoupon {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
