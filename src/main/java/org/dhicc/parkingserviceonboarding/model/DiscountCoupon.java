@@ -8,6 +8,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DiscountCoupon {
+
+    //webhook test용 주석
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
