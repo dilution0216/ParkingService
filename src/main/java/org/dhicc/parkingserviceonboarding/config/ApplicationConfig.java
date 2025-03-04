@@ -9,7 +9,6 @@ import org.springframework.web.client.RestTemplate;
 @EnableAsync  //  비동기 처리 활성화
 public class ApplicationConfig {
     @Bean
-    // t
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
