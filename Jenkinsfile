@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        BITBUCKET_CREDENTIALS = credentials('bitbucket-credentials')
+        BITBUCKET_CREDENTIALS = credentials('hskim1')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: 'bitbucket-credentials', url: 'https://bitbucket.org/dhicc/sp1-week2.git', branch: 'main'
+                git credentialsId: 'hskim1', url: 'https://hskim1@bitbucket.org/dhicc/sp1-week2.git', branch: 'feature/hskim1'
             }
         }
         stage('Build') {
