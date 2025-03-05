@@ -8,7 +8,9 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git credentialsId: 'hskim1', url: 'https://hskim1@bitbucket.org/dhicc/sp1-week2.git', branch: 'feature/hskim1'
+                git credentialsId: 'hskim1',
+                    url: 'https://hskim1@bitbucket.org/dhicc/sp1-week2.git',
+                    branch: 'feature/hskim1'
             }
         }
         stage('Build') {
