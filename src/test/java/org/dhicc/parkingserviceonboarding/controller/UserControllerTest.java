@@ -102,19 +102,19 @@ class UserControllerTest {
         System.out.println("🔥 특정 ID로 사용자 조회 테스트 실행");
 
         mockMvc.perform(get("/users/" + testUserId)
-                        .header(HttpHeaders.AUTHORIZATION, userToken))
+                        .header(HttpHeaders.AUTHORIZATION, adminToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("testUser"))
                 .andExpect(jsonPath("$.email").value("test@example.com"));
     }
 
-    /** ❌ 존재하지 않는 ID로 조회 시 404 Not Found */
+    /** ✅ 존재하지 않는 사용자 조회 시 404 반환 */
     @Test
     void testGetUserById_NotFound() throws Exception {
         System.out.println("🔥 존재하지 않는 사용자 조회 테스트 실행");
 
         mockMvc.perform(get("/users/99999")
-                        .header(HttpHeaders.AUTHORIZATION, userToken))
+                        .header(HttpHeaders.AUTHORIZATION, adminToken))
                 .andExpect(status().isNotFound());
     }
 
