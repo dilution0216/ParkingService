@@ -42,6 +42,8 @@ public class SecurityConfig {
                                 "/auth/login", "/auth/register",
                                 "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/pricing-policy").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/pricing-policy").hasRole("ADMIN")
                         .requestMatchers("/payment/all").hasRole("ADMIN")
                         .requestMatchers("/users/me", "/parking/**", "/payments/**","/payment/**", "/subscriptions/**").hasRole("USER")
                         .requestMatchers("/users/**", "/admin/**", "/subscription/admin/**").hasRole("ADMIN")
@@ -51,5 +53,4 @@ public class SecurityConfig {
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
-
 }
