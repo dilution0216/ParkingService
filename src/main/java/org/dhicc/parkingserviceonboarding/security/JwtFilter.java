@@ -39,15 +39,21 @@ public class JwtFilter extends OncePerRequestFilter {
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userService.loadUserByUsername(username);
 
+                // ✅ 유효성 검사에 실패했을 경우 로깅 추가
                 if (jwtUtil.validateToken(token, userDetails.getUsername())) {
-                    SecurityContextHolder.getContext().setAuthentication(
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
-                    );
+                    // ✅ SecurityContextHolder에 인증 설정 로직 개선
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
 
+                    System.out.println("✅ 인증 성공: " + authentication.getAuthorities());
+                } else {
+                    System.out.println("❌ 인증 실패: JWT 토큰 유효하지 않음");
                 }
             }
         }
 
         filterChain.doFilter(request, response);
     }
+
 }

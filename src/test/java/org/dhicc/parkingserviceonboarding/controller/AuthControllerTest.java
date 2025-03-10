@@ -11,6 +11,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -23,17 +25,24 @@ class AuthControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private final String userJson = """
-        {
-            "username": "testUser",
-            "password": "Test@1234",
-            "email": "test@example.com",
-            "role": "ROLE_USER"
-        }
-    """;
+    private String uniqueUsername;
+    private String uniqueEmail;
 
     @BeforeEach
     void setUp() throws Exception {
+        // ✅ 매번 고유한 값 생성 (UUID 활용)
+        uniqueUsername = "testUser_" + UUID.randomUUID();
+        uniqueEmail = uniqueUsername + "@example.com";
+
+        String userJson = String.format("""
+            {
+                "username": "%s",
+                "password": "Test@1234",
+                "email": "%s",
+                "role": "ROLE_USER"
+            }
+            """, uniqueUsername, uniqueEmail);
+
         // ✅ 사용자 등록 (회원가입 API 호출)
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -44,16 +53,18 @@ class AuthControllerTest {
     /** ✅ 1. 회원가입 테스트 */
     @Test
     void testRegisterUser() throws Exception {
+        String newUserJson = """
+            {
+                "username": "newUser",
+                "password": "New@1234",
+                "email": "new@example.com",
+                "role": "ROLE_USER"
+            }
+        """;
+
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {
-                                "username": "newUser",
-                                "password": "New@1234",
-                                "email": "new@example.com",
-                                "role": "ROLE_USER"
-                            }
-                        """))
+                        .content(newUserJson))
                 .andExpect(status().isOk())
                 .andExpect(content().string("회원가입이 완료되었습니다."));
     }
@@ -62,12 +73,12 @@ class AuthControllerTest {
     @Test
     @WithMockUser(username = "testUser", roles = {"USER"}) // ✅ Spring Security 인증 우회
     void testLogin() throws Exception {
-        String loginJson = """
+        String loginJson = String.format("""
             {
-                "username": "testUser",
+                "username": "%s",
                 "password": "Test@1234"
             }
-        """;
+        """, uniqueUsername);
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
