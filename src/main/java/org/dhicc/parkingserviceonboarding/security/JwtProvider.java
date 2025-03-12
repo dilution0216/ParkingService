@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,13 +16,13 @@ import java.util.Map;
 @Component
 public class JwtProvider {
 
-    private final Key key;
+    private final SecretKey key;
     private final long expirationMs;
 
     public JwtProvider(
             @Value("${jwt.secret}") String secretKey,
             @Value("${jwt.expiration}") long expirationMs) {
-        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)); // ✅ SecretKey 타입으로 변환
         this.expirationMs = expirationMs;
     }
 
@@ -37,34 +37,44 @@ public class JwtProvider {
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(key)
+                .signWith(key) // ✅ SecretKey 명확히 적용
                 .compact();
     }
 
     // ✅ 역할(Role) 정보를 추가한 새로운 메서드 추가
     public String generateToken(String username, String role) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", role); // 역할 정보 추가
+        claims.put("role", role); // ✅ 역할 정보 추가
 
         return Jwts.builder()
-                .claims(claims) // 클레임에 역할 추가
+                .claims(claims) // ✅ 클레임에 역할 추가
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(key)
+                .signWith(key) // ✅ SecretKey 명확히 적용
                 .compact();
     }
 
+    // ✅ JWT 유효성 검증 (최신 방식 적용)
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().build().parseSignedClaims(token);
+            Jwts.parser()
+                    .verifyWith(key) // ✅ 최신 방식 적용 (SecretKey 타입으로 명확히 설정)
+                    .build()
+                    .parseSignedClaims(token); // ✅ 최신 방식 유지
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
+    // ✅ 토큰에서 사용자 이름 추출 (최신 방식 적용)
     public String getUsernameFromToken(String token) {
-        return Jwts.parser().build().parseSignedClaims(token).getPayload().getSubject();
+        return Jwts.parser()
+                .verifyWith(key) // ✅ 최신 방식 적용
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject(); // ✅ 최신 방식 유지
     }
 }
