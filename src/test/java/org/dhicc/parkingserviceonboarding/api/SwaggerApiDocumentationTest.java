@@ -50,6 +50,6 @@ public class SwaggerApiDocumentationTest {
         // ✅ Subscription API가 문서에 정의되어 있는지 확인
         String responseBody = response.getBody().asString();
         assert responseBody.contains("/subscription/register");
-        assert responseBody.contains("/subscription/cancel/{vehicleNumber}");
+        assert responseBody.contains("/subscription/admin/{vehicleNumber}");
     }
 }
